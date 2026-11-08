@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escape-Room: Basquiats Atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f3e8; --ink:#141414; --yellow:#f6c700; --red:#e63323; --blue:#1e6fd9;
+  --green:#2f9e44; --muted:#5b5b5b; --card:#ffffff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:"Nunito",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;font-size:18px;line-height:1.5}
+body{background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:6px 6px;min-height:100vh}
+h1,h2,h3,.marker{font-family:"Permanent Marker","Comic Sans MS","Chalkboard SE",cursive;font-weight:400;letter-spacing:.5px}
+h1{font-size:2.3rem;margin:.2em 0}
+h2{font-size:1.8rem;margin:.2em 0 .4em}
+h3{font-size:1.25rem;margin:.6em 0 .3em}
+.wrap{max-width:1020px;margin:0 auto;padding:16px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 16px;background:var(--ink);color:#fff}
+header.top .brand{display:flex;align-items:center;gap:10px;font-family:"Permanent Marker",cursive;font-size:1.2rem}
+header.top .stats{display:flex;gap:14px;font-weight:700;font-size:.95rem;flex-wrap:wrap}
+header.top .stats span{background:#fff;color:var(--ink);padding:2px 10px;border-radius:4px}
+.crown{display:inline-block;vertical-align:middle}
+.card{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--ink);padding:20px;margin:18px 0;position:relative}
+.card.yellow{background:#fff6c9}
+.card.note{background:#fffdf5;border-style:dashed;box-shadow:none}
+.btn{font:inherit;font-weight:800;border:3px solid var(--ink);background:var(--yellow);color:var(--ink);padding:10px 18px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:transform .05s}
+.btn:hover{transform:translate(-1px,-1px)}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.secondary{background:#fff}
+.btn.red{background:var(--red);color:#fff}
+.btn.small{padding:5px 12px;font-size:.9rem;box-shadow:3px 3px 0 var(--ink)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+input[type=text],select{font:inherit;border:3px solid var(--ink);padding:8px 10px;background:#fff;max-width:100%}
+input[type=text]{width:100%}
+select{min-width:200px}
+.hidden{display:none!important}
+.feedback{margin-top:12px;font-weight:800;min-height:1.5em}
+.feedback.ok{color:var(--green)}
+.feedback.bad{color:var(--red)}
+.shake{animation:shake .35s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+/* map */
+.map{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px;margin-top:10px}
+.room-tile{border:3px solid var(--ink);background:#fff;padding:14px;cursor:pointer;box-shadow:5px 5px 0 var(--ink);text-align:left;font:inherit;color:inherit;position:relative;min-height:130px}
+.room-tile .num{font-family:"Permanent Marker",cursive;font-size:2rem;line-height:1}
+.room-tile .ttl{font-weight:800;margin-top:4px}
+.room-tile .st{font-size:.9rem;color:var(--muted);margin-top:6px}
+.room-tile.locked{background:#e9e6dc;cursor:not-allowed;opacity:.7;box-shadow:none}
+.room-tile.done{background:#e3f5e6}
+.room-tile .letter{position:absolute;right:12px;top:8px;font-family:"Permanent Marker",cursive;font-size:2.2rem;color:var(--red)}
+.room-tile:nth-child(3n+1){transform:rotate(-1deg)}
+.room-tile:nth-child(3n+2){transform:rotate(.8deg)}
+.door-tile{background:var(--ink);color:#fff}
+.door-tile.locked{background:#555;color:#ddd}
+.lettersbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.lettersbar .slot{width:46px;height:56px;border:3px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;font-family:"Permanent Marker",cursive;font-size:1.8rem;color:var(--red)}
+/* info text */
+.info p{margin:.4em 0}
+.info .fact{background:var(--yellow);padding:0 4px}
+.clip{display:block;flex:1 1 220px;background:#fff;border:2px solid var(--ink);padding:10px 12px;margin:6px;max-width:300px;box-shadow:3px 3px 0 rgba(0,0,0,.8);vertical-align:top}
+.clip:nth-child(odd){transform:rotate(-1.5deg)}
+.clip:nth-child(even){transform:rotate(1.2deg)}
+.clip b{font-family:"Permanent Marker",cursive;font-weight:400;font-size:1.2rem}
+/* quiz */
+.q{margin:14px 0;padding:12px;border:2px solid var(--ink);background:#fff}
+.q .opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.q label{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:6px 8px;border:2px solid transparent}
+.q label:hover{border-color:#ccc}
+.q input[type=radio]{width:22px;height:22px;flex:0 0 auto;margin-top:3px;accent-color:var(--ink)}
+/* graffiti wall */
+.wall{background:#3a3a3a;background-image:linear-gradient(#444 2px,transparent 2px),linear-gradient(90deg,#444 2px,transparent 2px);background-size:80px 40px;padding:18px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;border:3px solid var(--ink)}
+.tag{font:inherit;font-weight:700;color:#fff;background:transparent;border:3px dashed rgba(255,255,255,.6);padding:10px 12px;max-width:290px;cursor:pointer;text-align:left}
+.tag:nth-child(3n){color:#ffe066}
+.tag:nth-child(3n+1){color:#9fd3ff}
+.tag.sel{background:var(--yellow);color:var(--ink)!important;border-style:solid;border-color:#fff}
+/* timeline */
+.tl-pool,.tl-order{display:flex;flex-direction:column;gap:8px}
+.tl-item{font:inherit;text-align:left;background:#fff;border:3px solid var(--ink);padding:8px 12px;cursor:pointer}
+.tl-item.used{opacity:.35;cursor:default}
+.tl-order .tl-item{background:#fff6c9;cursor:default}
+.tl-order .tl-item .n{font-family:"Permanent Marker",cursive;margin-right:8px;color:var(--red)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+/* symbols */
+.sym-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.sym{border:3px solid var(--ink);background:#fff;padding:12px;display:flex;flex-direction:column;gap:8px}
+.sym .pic{height:90px;display:flex;align-items:center;justify-content:center;background:#fffdf5;border:2px dashed #999}
+.sym select{width:100%;min-width:0}
+/* gallery */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.frame{background:#fff;border:3px solid var(--ink);padding:10px;display:flex;flex-direction:column;gap:8px}
+.frame .imgbox{background:#222;height:200px;display:flex;align-items:center;justify-content:center;cursor:zoom-in}
+.frame img{max-width:100%;max-height:200px;display:block}
+.frame select{width:100%;min-width:0;font-size:.95rem}
+.desc-list{columns:2;column-gap:24px}
+.desc-list li{break-inside:avoid;margin-bottom:8px}
+/* lightbox */
+#lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:50;cursor:zoom-out;padding:16px}
+#lightbox img{max-width:100%;max-height:92vh;border:4px solid #fff}
+/* detective */
+.det{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start;margin:16px 0;padding:14px;border:3px solid var(--ink);background:#fff}
+.det img{width:100%;display:block;border:2px solid var(--ink);cursor:zoom-in}
+/* cloze */
+.cloze{font-size:1.1rem;line-height:2.4}
+.cloze select{min-width:150px;padding:4px 6px;font-size:1rem}
+.hint{background:#e8f0ff;border-left:6px solid var(--blue);padding:10px 14px;margin-top:12px}
+.success{background:#e3f5e6;border:3px solid var(--green);padding:16px;margin-top:14px}
+.success .big{font-family:"Permanent Marker",cursive;font-size:3rem;color:var(--red);line-height:1}
+.cert{text-align:center;background:#fff;border:6px double var(--ink);padding:28px;box-shadow:8px 8px 0 var(--ink)}
+.cert h1{font-size:2.6rem}
+.foot{font-size:.8rem;color:var(--muted);margin:30px 0 10px;border-top:1px solid #ccc;padding-top:10px}
+.tag-sm{display:inline-block;background:var(--ink);color:#fff;padding:1px 8px;font-size:.85rem;font-weight:700;margin-bottom:6px}
+.strike{text-decoration:line-through;text-decoration-thickness:4px}
+@media (max-width:700px){
+  html,body{font-size:16px}
+  .cols,.det{grid-template-columns:1fr}
+  .desc-list{columns:1}
+  h1{font-size:1.8rem}
+}
+@media print{header.top,.btn{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg class="crown" width="42" height="30" viewBox="0 0 84 60" aria-hidden="true"><path d="M6 50 L10 12 L26 34 L40 6 L54 34 L72 10 L76 50 Z" fill="none" stroke="#f6c700" stroke-width="6" stroke-linejoin="round"/><path d="M4 54 L80 52" stroke="#f6c700" stroke-width="6" stroke-linecap="round"/></svg> Basquiats Atelier</div>
+  <div class="stats"><span id="teamLbl">Team: –</span><span>⏱ <b id="timer">00:00</b></span><span>💡 Tipps: <b id="hintCount">0</b></span></div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<div id="lightbox" class="hidden" role="dialog" aria-label="Bild vergrößert"><img alt=""></div>
+
+<div class="wrap foot">
+  Abbildungen: Werke von Jean-Michel Basquiat, © Estate of Jean-Michel Basquiat. Die Bilddateien sind nicht Teil dieses Repositorys und werden nur lokal zur Veranschaulichung im Unterricht genutzt (§ 60a UrhG).
+  · <button class="btn small secondary" id="resetBtn">Spiel neu starten</button>
+</div>
+
+<script>
+const IMG = {
+  ohnetitel1981: "bilder/ohnetitel1981.jpg",
+  johnnypump: "bilder/johnnypump.jpg",
+  krone: "bilder/krone.jpg",
+  hollywood: "bilder/hollywood.jpg",
+  geschichte: "bilder/geschichte.jpg",
+  polizist: "bilder/polizist.jpg",
+  ohnetitel1982: "bilder/ohnetitel1982.jpg",
+  prokopf: "bilder/prokopf.jpg"
+};
+
+const CROWN = (c="#141414",w=70)=>`<svg width="${w}" height="${w*0.72}" viewBox="0 0 84 60" aria-label="Krone"><path d="M6 50 L10 12 L26 34 L40 6 L54 34 L72 10 L76 50 Z" fill="none" stroke="${c}" stroke-width="6" stroke-linejoin="round"/><path d="M4 54 L80 52" stroke="${c}" stroke-width="6" stroke-linecap="round"/></svg>`;
+const SKULL = `<svg width="70" height="78" viewBox="0 0 70 78" aria-label="Schädel"><path d="M35 4 C14 4 5 20 6 36 C7 46 12 50 14 54 L16 66 L54 66 L56 54 C58 50 63 46 64 36 C65 20 56 4 35 4 Z" fill="#fff" stroke="#141414" stroke-width="4"/><circle cx="23" cy="34" r="8" fill="#141414"/><circle cx="47" cy="34" r="8" fill="#141414"/><path d="M35 42 L30 52 L40 52 Z" fill="#141414"/><path d="M22 66 L22 74 M30 66 L30 74 M40 66 L40 74 M48 66 L48 74" stroke="#141414" stroke-width="4"/></svg>`;
+
+/* ---------------- State ---------------- */
+const STORE_KEY = "basquiat-escape-v1";
+let S = load() || {team:"", started:null, elapsed:0, hints:0, solved:{}, finished:null, current:"start"};
+function load(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------------- Rooms ---------------- */
+const ROOMS = [
+ {id:"r1", num:1, title:"Brooklyn, 1960", sub:"Kindheit", letter:"T",
+  hint:"Lest den Infotext noch einmal genau. Die Antworten stehen alle darin, auch der Name des Buches."},
+ {id:"r2", num:2, title:"Die Wände von New York", sub:"SAMO©", letter:"K",
+  hint:"Genau vier Sprüche sind richtig. Basquiat hat nie an einer Kunstakademie studiert und SAMO© schrieb Sprüche, keine Comic-Bilder."},
+ {id:"r3", num:3, title:"Zeitreise", sub:"Lebenslauf ordnen", letter:"E",
+  hint:"Achtet auf die Jahreszahlen auf den Zeitungsschnipseln. Geburt ist 1960, der Unfall war, als er sieben Jahre alt war."},
+ {id:"r4", num:4, title:"Die Geheimsprache", sub:"Zeichen & Symbole", letter:"L",
+  hint:"Das © ist das Copyright-Zeichen: Es sagt „Das gehört mir!“. Durchgestrichene Wörter will man erst recht lesen."},
+ {id:"r5", num:5, title:"Die Galerie", sub:"Bilder erkennen", letter:"T",
+  hint:"Schaut auf Wörter in den Bildern: „PER CAPITA“ heißt „pro Kopf“, „HOLLYWOOD AFRICANS“ steht groß oben. Der Polizist trägt eine Mütze."},
+ {id:"r6", num:6, title:"Bilddetektive", sub:"Genau hinschauen", letter:"E",
+  hint:"Klickt auf die Bilder, um sie zu vergrößern. Das Wort auf der Hose kennt man auch von Boxhandschuhen."},
+ {id:"r7", num:7, title:"Ruhm & Vermächtnis", sub:"Die letzten Jahre", letter:"S",
+  hint:"Basquiat war 27 Jahre alt, als er starb. Sein berühmter Freund war ein Pop-Art-Künstler mit weißen Haaren."}
+];
+const SOLUTION = "SKELETT";
+
+/* ---------------- Timer ---------------- */
+let tick=null;
+function startTimer(){
+  if(tick) return;
+  tick=setInterval(()=>{ if(S.started && !S.finished){ S.elapsed++; if(S.elapsed%5===0) save(); renderStats(); } },1000);
+}
+function fmt(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0"); }
+function renderStats(){
+  document.getElementById("timer").textContent = fmt(S.elapsed);
+  document.getElementById("hintCount").textContent = S.hints;
+  document.getElementById("teamLbl").textContent = "Team: " + (S.team || "–");
+}
+
+/* ---------------- Helpers ---------------- */
+const app = document.getElementById("app");
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function go(view){ S.current=view; save(); render(); window.scrollTo(0,0); }
+function unlockedIndex(){ let i=0; while(i<ROOMS.length && S.solved[ROOMS[i].id]) i++; return i; }
+function fb(el, ok, msg){
+  el.className = "feedback " + (ok?"ok":"bad");
+  el.textContent = msg;
+  if(!ok){ el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+}
+function roomHeader(r){
+  return `<div class="row" style="justify-content:space-between">
+    <button class="btn small secondary" onclick="go('map')">← Zum Lageplan</button>
+    <span class="tag-sm">Raum ${r.num} von ${ROOMS.length}</span></div>
+    <h1>${r.num}. ${r.title}</h1>`;
+}
+function hintBox(r){
+  return `<div class="row" style="margin-top:14px"><button class="btn small secondary" id="hintBtn">💡 Tipp anzeigen</button></div>
+  <div class="hint hidden" id="hintTxt">${r.hint}</div>`;
+}
+function wireHint(r){
+  const b=document.getElementById("hintBtn"); if(!b) return;
+  b.onclick=()=>{ const t=document.getElementById("hintTxt");
+    if(t.classList.contains("hidden")){ t.classList.remove("hidden"); if(!S["hint_"+r.id]){ S["hint_"+r.id]=1; S.hints++; save(); renderStats(); } } };
+}
+function solved(r){
+  S.solved[r.id]=true; save();
+  const box=document.getElementById("solvedBox");
+  box.innerHTML = `<div class="success"><div class="row" style="gap:20px"><div class="big">${r.letter}</div>
+   <div><b>Geschafft!</b> Ihr habt einen Buchstaben für das Türschloss gefunden: <b>${r.letter}</b>.<br>Schreibt ihn euch auf!</div></div>
+   <div class="row" style="margin-top:12px"><button class="btn" onclick="go('map')">Weiter zum Lageplan →</button></div></div>`;
+  box.scrollIntoView({behavior:"smooth",block:"center"});
+}
+function zoomable(){
+  document.querySelectorAll("[data-zoom]").forEach(el=>{
+    el.onclick=()=>{ const lb=document.getElementById("lightbox"); lb.querySelector("img").src=el.dataset.zoom; lb.querySelector("img").alt=el.dataset.alt||""; lb.classList.remove("hidden"); };
+  });
+}
+document.getElementById("lightbox").onclick=()=>document.getElementById("lightbox").classList.add("hidden");
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") document.getElementById("lightbox").classList.add("hidden"); });
+document.getElementById("resetBtn").onclick=()=>{
+  if(confirm("Wirklich alles löschen und neu starten?")){ try{localStorage.removeItem(STORE_KEY);}catch(e){} S={team:"",started:null,elapsed:0,hints:0,solved:{},finished:null,current:"start"}; render(); renderStats(); }
+};
+
+/* ---------------- Views ---------------- */
+function render(){
+  const v=S.current;
+  if(v==="start") return viewStart();
+  if(v==="map") return viewMap();
+  if(v==="door") return viewDoor();
+  if(v==="cert") return viewCert();
+  const r=ROOMS.find(x=>x.id===v);
+  if(r){ ({r1,r2,r3,r4,r5,r6,r7})[r.id](r); wireHint(r); zoomable(); if(S.solved[r.id]) showAlreadySolved(r); }
+}
+function showAlreadySolved(r){
+  const box=document.getElementById("solvedBox");
+  if(box) box.innerHTML=`<div class="success"><div class="row" style="gap:20px"><div class="big">${r.letter}</div><div>Diesen Raum habt ihr schon gelöst. Euer Buchstabe: <b>${r.letter}</b></div></div><div class="row" style="margin-top:12px"><button class="btn" onclick="go('map')">Zum Lageplan →</button></div></div>`;
+}
+
+function viewStart(){
+  app.innerHTML = `
+  <div class="card yellow">
+    <div class="row" style="gap:18px;align-items:flex-start">
+      <div>${CROWN("#141414",90)}</div>
+      <div style="flex:1;min-width:240px">
+        <h1>Eingeschlossen im Atelier!</h1>
+        <p>New York, 1983. Ihr besucht das Atelier des jungen Malers <b>Jean-Michel Basquiat</b>. Überall liegen Farbtöpfe, Zeichnungen und Bücher herum. Plötzlich fällt die Tür ins Schloss!</p>
+        <p>Das Türschloss braucht ein <b>geheimes Lösungswort</b>. In jedem der <b>7 Räume</b> findet ihr einen Buchstaben, wenn ihr das Rätsel löst. Wer alle Buchstaben hat, kann die Tür öffnen.</p>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>So spielt ihr</h2>
+    <ul>
+      <li>Ihr arbeitet <b>zu zweit</b> an einem Gerät. Wechselt euch beim Klicken ab und lest die Texte gemeinsam.</li>
+      <li>Lest in jedem Raum zuerst den <b>Infotext</b> oder schaut die <b>Bilder</b> genau an. Dann löst ihr das Rätsel.</li>
+      <li>Schreibt jeden gefundenen Buchstaben auf einen Zettel.</li>
+      <li>Wenn ihr nicht weiterkommt, gibt es einen <b>💡 Tipp</b>. Jeder Tipp wird gezählt.</li>
+      <li>Ihr habt etwa <b>45 Minuten</b> Zeit. Die Uhr oben läuft mit.</li>
+    </ul>
+    <h3>Wie heißt euer Team?</h3>
+    <div class="row"><input type="text" id="teamIn" maxlength="40" placeholder="z. B. Lena & Ali" style="max-width:380px" value="${esc(S.team)}">
+    <button class="btn" id="startBtn">Los geht’s!</button></div>
+    <div class="feedback" id="fbStart"></div>
+  </div>`;
+  document.getElementById("startBtn").onclick=()=>{
+    const t=document.getElementById("teamIn").value.trim();
+    if(t.length<2) return fb(document.getElementById("fbStart"),false,"Bitte gebt euren Teamnamen ein.");
+    S.team=t; if(!S.started) S.started=Date.now(); save(); renderStats(); startTimer(); go("map");
+  };
+  document.getElementById("teamIn").addEventListener("keydown",e=>{ if(e.key==="Enter") document.getElementById("startBtn").click(); });
+}
+
+function viewMap(){
+  const ui=unlockedIndex();
+  const tiles = ROOMS.map((r,i)=>{
+    const done=!!S.solved[r.id], locked=i>ui;
+    return `<button class="room-tile ${done?"done":""} ${locked?"locked":""}" ${locked?"disabled":""} data-room="${r.id}">
+      <div class="num">${r.num}</div><div class="ttl">${r.title}</div><div class="st">${r.sub}<br>${done?"✔ gelöst":locked?"🔒 verschlossen":"➜ jetzt betreten"}</div>
+      ${done?`<div class="letter">${r.letter}</div>`:""}</button>`;
+  }).join("");
+  const allDone = ui>=ROOMS.length;
+  const letters = ROOMS.map(r=>`<div class="slot">${S.solved[r.id]?r.letter:""}</div>`).join("");
+  app.innerHTML = `
+    <h1>Lageplan des Ateliers</h1>
+    <p>Die Räume öffnen sich nacheinander. Löst ein Rätsel, dann geht die nächste Tür auf.</p>
+    <div class="card note"><b>Eure Buchstaben bisher:</b><div class="lettersbar">${letters}</div></div>
+    <div class="map">${tiles}
+      <button class="room-tile door-tile ${allDone?"":"locked"}" ${allDone?"":"disabled"} data-room="door">
+        <div class="num">🚪</div><div class="ttl">Die Ateliertür</div><div class="st" style="color:inherit">${allDone?"➜ Lösungswort eingeben":"🔒 erst alle 7 Räume lösen"}</div></button>
+    </div>`;
+  app.querySelectorAll("[data-room]").forEach(b=>b.onclick=()=>{ if(!b.disabled) go(b.dataset.room); });
+}
+
+/* ---- Raum 1: Kindheit ---- */
+function r1(r){
+  const Q=[
+    {q:"Wann und wo wurde Jean-Michel Basquiat geboren?", o:["1960 in Brooklyn, New York","1972 in Paris","1955 in Los Angeles"], a:0},
+    {q:"Woher stammte seine Familie?", o:["Der Vater aus Italien, die Mutter aus Kanada","Der Vater aus Haiti, die Mutter aus einer Familie aus Puerto Rico","Beide aus Deutschland"], a:1},
+    {q:"Mit sieben Jahren hatte er einen schweren Unfall. Was schenkte ihm seine Mutter im Krankenhaus?", o:["Einen Farbkasten","Ein Anatomie-Buch über den menschlichen Körper („Gray’s Anatomy“)","Eine Spraydose"], a:1},
+    {q:"Warum ist dieses Geschenk für seine Kunst wichtig?", o:["Er malte danach nur noch Tiere","Später tauchen Knochen, Schädel und Körperteile oft in seinen Bildern auf","Er wurde dadurch Arzt"], a:1}
+  ];
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info">
+    <span class="tag-sm">Infotext</span>
+    <p>Jean-Michel Basquiat wird am <span class="fact">22. Dezember 1960</span> in <span class="fact">Brooklyn</span> geboren, einem Stadtteil von New York (USA). Sein Vater kommt aus <span class="fact">Haiti</span>, die Familie seiner Mutter aus <span class="fact">Puerto Rico</span>. Zu Hause hört er Englisch, Französisch und Spanisch.</p>
+    <p>Seine Mutter liebt Kunst. Sie nimmt ihn oft mit in die großen Museen von New York. Jean-Michel zeichnet schon als kleiner Junge sehr viel: Comics, Autos, Figuren aus Fernsehserien.</p>
+    <p>Mit <span class="fact">sieben Jahren</span> wird er beim Spielen auf der Straße von einem Auto angefahren und muss lange im Krankenhaus bleiben. Seine Mutter schenkt ihm dort ein dickes Buch über den menschlichen Körper: <span class="fact">„Gray’s Anatomy“</span>. Darin sind Knochen, Muskeln und Organe genau abgebildet. Jean-Michel schaut es immer wieder an. Später tauchen <b>Skelette, Schädel und Körperteile</b> in vielen seiner Bilder auf.</p>
+  </div>
+  <div class="card">
+    <h2>Rätsel: Das Kinderzimmer</h2>
+    <p>Beantwortet alle Fragen richtig, dann öffnet sich die Schublade mit dem Buchstaben.</p>
+    <div id="quiz">${Q.map((x,i)=>`<div class="q"><b>${i+1}. ${x.q}</b><div class="opts">${x.o.map((o,j)=>`<label><input type="radio" name="q${i}" value="${j}"> <span>${o}</span></label>`).join("")}</div></div>`).join("")}</div>
+    <button class="btn" id="check">Prüfen</button>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  document.getElementById("check").onclick=()=>{
+    let right=0; Q.forEach((x,i)=>{ const s=document.querySelector(`input[name=q${i}]:checked`); if(s && +s.value===x.a) right++; });
+    if(right===Q.length){ fb(document.getElementById("fb"),true,"Alles richtig!"); solved(r); }
+    else fb(document.getElementById("fb"),false,`${right} von ${Q.length} richtig. Lest noch einmal nach!`);
+  };
+}
+
+/* ---- Raum 2: SAMO ---- */
+function r2(r){
+  const T=[
+    {t:"SAMO© war der Graffiti-Name von Basquiat und seinem Freund Al Diaz.", ok:true},
+    {t:"Basquiat studierte Malerei an einer berühmten Kunstakademie.", ok:false},
+    {t:"SAMO© schrieb rätselhafte, witzige Sprüche an Hauswände.", ok:true},
+    {t:"SAMO© sprühte große Bilder von Comic-Helden.", ok:false},
+    {t:"Mit 17 Jahren verließ Basquiat die Schule und das Elternhaus.", ok:true},
+    {t:"Mit 17 Jahren hatte Basquiat schon ein eigenes Museum.", ok:false},
+    {t:"Um Geld zu verdienen, verkaufte er selbst bemalte Postkarten und T-Shirts.", ok:true},
+    {t:"Basquiat malte nur mit Bleistift auf weißem Papier.", ok:false}
+  ];
+  const order=[3,0,5,2,7,4,1,6];
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info">
+    <span class="tag-sm">Infotext</span>
+    <p>Als Jugendlicher hat Basquiat keine Lust mehr auf Schule. Mit <span class="fact">17 Jahren</span> verlässt er die Schule und auch sein Zuhause. Er lebt mal bei Freunden, mal hier, mal dort. Um etwas Geld zu verdienen, verkauft er <span class="fact">selbst bemalte Postkarten und T-Shirts</span> auf der Straße.</p>
+    <p>Ab <span class="fact">1977</span> schreibt er zusammen mit seinem Schulfreund <span class="fact">Al Diaz</span> geheimnisvolle Sprüche an die Hauswände im Stadtteil Manhattan. Sie unterschreiben mit <span class="fact">SAMO©</span>. Das steht für „same old …“, also ungefähr „immer der gleiche alte Kram“. Die Sprüche sind witzig, rätselhaft und oft frech. Ganz New York fragt sich: Wer ist SAMO©?</p>
+    <p>1980 ist Schluss mit SAMO©. An den Wänden steht plötzlich: <b>„SAMO© IS DEAD“</b>. Basquiat will jetzt als <b>Maler</b> bekannt werden. Eine Kunstakademie hat er nie besucht: Er hat sich alles selbst beigebracht.</p>
+  </div>
+  <div class="card">
+    <h2>Rätsel: Die Graffiti-Wand</h2>
+    <p>An der Wand stehen 8 Sprüche. <b>Nur 4 davon sind wahr.</b> Klickt die 4 wahren Sprüche an und drückt dann auf „Prüfen“.</p>
+    <div class="wall" id="wall">${order.map(i=>`<button class="tag" data-i="${i}">${T[i].t}</button>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="check">Prüfen</button></div>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  app.querySelectorAll(".tag").forEach(b=>b.onclick=()=>b.classList.toggle("sel"));
+  document.getElementById("check").onclick=()=>{
+    const sel=[...app.querySelectorAll(".tag.sel")].map(b=>+b.dataset.i);
+    const f=document.getElementById("fb");
+    if(sel.length!==4) return fb(f,false,`Ihr habt ${sel.length} Sprüche markiert. Es müssen genau 4 sein.`);
+    const wrong=sel.filter(i=>!T[i].ok).length;
+    if(wrong===0){ fb(f,true,"Richtig! Ihr kennt euch auf den Straßen von New York aus."); solved(r); }
+    else fb(f,false,`${wrong} eurer markierten Sprüche ${wrong===1?"ist":"sind"} falsch.`);
+  };
+}
+
+/* ---- Raum 3: Zeitstrahl ---- */
+function r3(r){
+  const E=[
+    "Geburt in Brooklyn, New York",
+    "Autounfall – im Krankenhaus bekommt er das Anatomie-Buch",
+    "SAMO©-Sprüche an den Hauswänden von Manhattan",
+    "Erste Ausstellung: „Times Square Show“ in New York",
+    "Ausstellung auf der documenta in Kassel (Deutschland)",
+    "Gemeinsame Bilder mit Andy Warhol",
+    "Basquiat stirbt mit nur 27 Jahren"
+  ];
+  const shuffled=[4,1,6,2,0,5,3];
+  let picked=[];
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info">
+    <span class="tag-sm">Zeitungsschnipsel aus dem Atelier</span><div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+    <span class="clip"><b>1980</b><br>Bei der „Times Square Show“ zeigt Basquiat zum ersten Mal Bilder in einer Ausstellung. Viele sind begeistert.</span>
+    <span class="clip"><b>1968</b><br>Ein Siebenjähriger wird in Brooklyn von einem Auto angefahren. Im Krankenhaus liest er ein Buch über Knochen und Muskeln.</span>
+    <span class="clip"><b>1983 – 1985</b><br>Der junge Maler und der berühmte Pop-Art-Künstler <b>Andy Warhol</b> werden Freunde und malen gemeinsam große Bilder.</span>
+    <span class="clip"><b>1960</b><br>In Brooklyn kommt am 22. Dezember ein Junge zur Welt: Jean-Michel.</span>
+    <span class="clip"><b>1988</b><br>Traurige Nachricht: Der Maler Jean-Michel Basquiat ist mit 27 Jahren gestorben.</span>
+    <span class="clip"><b>1982</b><br>Basquiat stellt auf der <b>documenta</b> in Kassel aus, einer der wichtigsten Kunstausstellungen der Welt. Er ist mit 21 Jahren der jüngste Künstler dort.</span>
+    <span class="clip"><b>1977</b><br>Wer ist SAMO©? Rätselhafte Sprüche tauchen an den Wänden von Manhattan auf.</span></div>
+  </div>
+  <div class="card">
+    <h2>Rätsel: Bringt das Leben in die richtige Reihenfolge</h2>
+    <p>Klickt die Ereignisse <b>vom frühesten zum spätesten</b> an. Sie wandern dann nach rechts auf den Zeitstrahl.</p>
+    <div class="cols">
+      <div><h3>Ereignisse</h3><div class="tl-pool" id="pool">${shuffled.map(i=>`<button class="tl-item" data-i="${i}">${E[i]}</button>`).join("")}</div></div>
+      <div><h3>Zeitstrahl</h3><div class="tl-order" id="ord"><i style="color:#777">noch leer …</i></div></div>
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="check">Prüfen</button><button class="btn secondary" id="undo">Zurücksetzen</button></div>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  const ord=document.getElementById("ord");
+  function draw(){
+    ord.innerHTML = picked.length? picked.map((i,k)=>`<div class="tl-item"><span class="n">${k+1}.</span>${E[i]}</div>`).join("") : `<i style="color:#777">noch leer …</i>`;
+    app.querySelectorAll("#pool .tl-item").forEach(b=>{ const u=picked.includes(+b.dataset.i); b.classList.toggle("used",u); b.disabled=u; });
+  }
+  app.querySelectorAll("#pool .tl-item").forEach(b=>b.onclick=()=>{ picked.push(+b.dataset.i); draw(); });
+  document.getElementById("undo").onclick=()=>{ picked=[]; draw(); document.getElementById("fb").textContent=""; };
+  document.getElementById("check").onclick=()=>{
+    const f=document.getElementById("fb");
+    if(picked.length<E.length) return fb(f,false,"Ordnet zuerst alle 7 Ereignisse ein.");
+    const firstWrong=picked.findIndex((v,k)=>v!==k);
+    if(firstWrong===-1){ fb(f,true,"Perfekt! Der Zeitstrahl stimmt."); solved(r); }
+    else fb(f,false,`Bis Platz ${firstWrong} stimmt alles. Ab Platz ${firstWrong+1} ist etwas durcheinander. Setzt zurück und versucht es noch einmal.`);
+  };
+}
+
+/* ---- Raum 4: Symbole ---- */
+function r4(r){
+  const SY=[
+    {pic:CROWN("#141414",80), name:"Die Krone"},
+    {pic:`<span class="marker" style="font-size:3.4rem">©</span>`, name:"Das ©-Zeichen"},
+    {pic:`<span class="marker strike" style="font-size:1.8rem">ZUCKER</span>`, name:"Durchgestrichene Wörter"},
+    {pic:SKULL, name:"Schädel und Knochen"},
+    {pic:`<span class="marker" style="font-size:1rem;line-height:1.2;text-align:left">TOBACCO<br>SUGAR CANE<br>1940<br>200 YEN</span>`, name:"Wörter, Listen und Zahlen"}
+  ];
+  const M=[
+    "Ehre für Helden: Er „krönt“ Menschen, die er bewundert, z. B. Musiker und Boxer, und auch sich selbst.",
+    "„Das gehört mir!“ Er zeigt damit, dass in der Welt alles gekauft und verkauft wird, auch Kunst.",
+    "Gerade dadurch will man sie erst recht lesen. Basquiat sagte: Man sieht sie so besser.",
+    "Der Blick unter die Haut: Er kannte den Körper aus dem Anatomie-Buch. Es zeigt auch, wie verletzlich Menschen sind.",
+    "Das Bild wird wie ein Notizbuch oder ein Gedicht: Man soll es anschauen und lesen."
+  ];
+  const optOrder=[2,4,0,3,1];
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info">
+    <span class="tag-sm">Infotext</span>
+    <p>Basquiats Bilder sind voller <b>Zeichen</b>. Er malt mit Ölkreide, Acrylfarbe und Stiften, oft schnell und wild. Er kombiniert <b>Figuren, Wörter, Zahlen und Symbole</b>, als würde er auf eine Wand oder in ein Notizbuch schreiben. Manche Wörter streicht er durch, andere wiederholt er.</p>
+    <p>Sein bekanntestes Zeichen ist die <span class="fact">dreizackige Krone</span>. Sie wird fast zu seiner Unterschrift. Mit ihr ehrt er Menschen, die er bewundert: schwarze Jazzmusiker, Sportler und Boxer, aber auch sich selbst als Künstler.</p>
+    <p>In vielen Bildern zeigt er <b>schwarze Menschen als Helden</b>. Das war damals in Museen sehr selten. Er malt auch, wo sie ungerecht behandelt werden.</p>
+  </div>
+  <div class="card">
+    <h2>Rätsel: Entschlüsselt die Geheimsprache</h2>
+    <p>Ordnet jedem Zeichen die passende Bedeutung zu. Lest zuerst die Bedeutungen A bis E.</p>
+    <div class="card note" style="margin:10px 0 16px">${optOrder.map((j,k)=>`<p style="margin:.3em 0"><b class="marker" style="color:#e63323;font-size:1.2rem">${"ABCDE"[k]}</b>&nbsp; ${M[j]}</p>`).join("")}</div>
+    <div class="sym-grid">${SY.map((s,i)=>`<div class="sym"><div class="pic">${s.pic}</div><b>${s.name}</b>
+      <select id="s${i}" aria-label="Bedeutung für ${s.name}"><option value="">– Bedeutung wählen –</option>${optOrder.map((j,k)=>`<option value="${j}">Bedeutung ${"ABCDE"[k]}</option>`).join("")}</select></div>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="check">Prüfen</button></div>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  document.getElementById("check").onclick=()=>{
+    let right=0, empty=0; SY.forEach((s,i)=>{ const v=document.getElementById("s"+i).value; if(v==="") empty++; else if(+v===i) right++; });
+    const f=document.getElementById("fb");
+    if(empty) return fb(f,false,"Wählt zuerst für jedes Zeichen eine Bedeutung aus.");
+    if(right===SY.length){ fb(f,true,"Ihr sprecht jetzt Basquiats Geheimsprache!"); solved(r); }
+    else fb(f,false,`${right} von ${SY.length} Zuordnungen stimmen.`);
+  };
+}
+
+/* ---- Raum 5: Galerie ---- */
+function r5(r){
+  const W=[
+    {k:"johnnypump", t:"Junge und Hund in einem Johnnypump (1982)", d:"Ein Junge mit erhobenen Armen und ein Hund spielen im Sommer im Wasser eines Hydranten. „Johnnypump“ nennt man in New York einen Feuerhydranten."},
+    {k:"krone", t:"Ohne Titel (Krone) (1982)", d:"Eine schwarze, dreizackige Krone auf zusammengeklebten Papierstücken. Die Krone ist Basquiats Markenzeichen."},
+    {k:"hollywood", t:"Hollywood Africans (1983)", d:"Leuchtend gelbes Bild mit drei Köpfen und vielen Wörtern. Basquiat zeigt sich und zwei Freunde in Hollywood. Er kritisiert, dass schwarze Schauspieler dort früher nur kleine, klischeehafte Rollen bekamen."},
+    {k:"prokopf", t:"Pro Kopf / Per Capita (1981)", d:"Ein Boxer mit Heiligenschein hält eine Fackel wie die Freiheitsstatue. Am Rand stehen US-Bundesstaaten mit Zahlen: Wie viel Geld haben die Menschen dort pro Kopf?"},
+    {k:"polizist", t:"Die Ironie des schwarzen Polizisten (1981)", d:"Ein großer Polizist mit Mütze und maskenhaftem Gesicht. Basquiat fragt: Wie fühlt es sich an, für ein System zu arbeiten, das Menschen wie einen selbst oft ungerecht behandelt?"},
+    {k:"geschichte", t:"Ohne Titel (Geschichte der Schwarzen Menschen) (1983)", d:"Großes Bild aus drei Teilen mit Masken, Wörtern wie „NUBA“ und „SICKLE“ (Sichel). Es erzählt vom alten Ägypten am Nil und von der Sklaverei."}
+  ];
+  const optOrder=[3,0,5,2,4,1];
+  const imgOrder=[2,4,0,5,1,3];
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info">
+    <span class="tag-sm">Die Ausstellung</span>
+    <p>Im großen Raum hängen sechs Bilder, aber die Namensschilder sind heruntergefallen! Lest die Beschreibungen und hängt die Schilder wieder richtig auf.</p>
+    <ul class="desc-list">${optOrder.map(i=>`<li><b>${W[i].t}:</b> ${W[i].d}</li>`).join("")}</ul>
+  </div>
+  <div class="card">
+    <h2>Rätsel: Welches Schild gehört zu welchem Bild?</h2>
+    <p>Tipp: Klickt auf ein Bild, um es groß anzusehen.</p>
+    <div class="gal">${imgOrder.map((i,n)=>`<div class="frame"><div class="imgbox" data-zoom="${IMG[W[i].k]}" data-alt="Bild ${String.fromCharCode(65+n)}"><img src="${IMG[W[i].k]}" alt="Bild ${String.fromCharCode(65+n)}"></div>
+      <b>Bild ${String.fromCharCode(65+n)}</b><select data-i="${i}" aria-label="Titel für Bild ${String.fromCharCode(65+n)}"><option value="">– Titel wählen –</option>${optOrder.map(j=>`<option value="${j}">${W[j].t}</option>`).join("")}</select></div>`).join("")}</div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="check">Prüfen</button></div>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  document.getElementById("check").onclick=()=>{
+    const sels=[...app.querySelectorAll(".frame select")];
+    const f=document.getElementById("fb");
+    if(sels.some(s=>s.value==="")) return fb(f,false,"Wählt für jedes Bild einen Titel aus.");
+    const right=sels.filter(s=>+s.value===+s.dataset.i).length;
+    if(right===sels.length){ fb(f,true,"Die Ausstellung ist gerettet!"); solved(r); }
+    else fb(f,false,`${right} von ${sels.length} Schildern hängen richtig.`);
+  };
+}
+
+/* ---- Raum 6: Bilddetektive ---- */
+function r6(r){
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info"><span class="tag-sm">Auftrag</span>
+    <p>Kunstdetektive schauen ganz genau hin. Klickt auf die Bilder, um sie zu vergrößern, und beantwortet die Fragen. Achtet auf kleine Details!</p></div>
+  <div class="det"><img src="${IMG.prokopf}" data-zoom="${IMG.prokopf}" alt="Pro Kopf, 1981">
+    <div><h3>„Pro Kopf“ (1981)</h3>
+      <p><b>a)</b> Welches Wort steht auf der Hose des Boxers?</p>
+      <input type="text" id="a1" placeholder="Wort eingeben" autocomplete="off">
+      <p><b>b)</b> Was hält der Boxer in einer Hand hoch?</p>
+      <select id="a2"><option value="">– wählen –</option><option value="0">einen Pokal</option><option value="1">eine brennende Fackel</option><option value="2">einen Boxhandschuh</option></select>
+    </div></div>
+  <div class="det"><img src="${IMG.hollywood}" data-zoom="${IMG.hollywood}" alt="Hollywood Africans, 1983">
+    <div><h3>„Hollywood Africans“ (1983)</h3>
+      <p><b>c)</b> Welche Farbe bestimmt das ganze Bild?</p>
+      <select id="a3"><option value="">– wählen –</option><option value="0">Blau</option><option value="1">Gelb</option><option value="2">Rot</option></select>
+      <p><b>d)</b> Welche Jahreszahl steht ganz oben im Bild hinter „HOLLYWOOD AFRICANS“?</p>
+      <input type="text" id="a4" placeholder="Jahreszahl" inputmode="numeric" autocomplete="off">
+    </div></div>
+  <div class="det"><img src="${IMG.ohnetitel1982}" data-zoom="${IMG.ohnetitel1982}" alt="Ohne Titel, 1982">
+    <div><h3>„Ohne Titel“ (1982)</h3>
+      <p>Dieser Kopf auf blauem Grund wurde 2017 bei einer Versteigerung in New York an einen japanischen Sammler verkauft. Damals war es das teuerste Bild eines amerikanischen Künstlers, das je versteigert wurde.</p>
+      <p><b>e)</b> Was schätzt ihr: Wie viel hat das Bild gekostet?</p>
+      <select id="a5"><option value="">– wählen –</option><option value="0">ca. 11 000 Dollar</option><option value="1">ca. 1,1 Millionen Dollar</option><option value="2">ca. 110 Millionen Dollar</option></select>
+    </div></div>
+  <div class="card">
+    <button class="btn" id="check">Alle Antworten prüfen</button>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  document.getElementById("check").onclick=()=>{
+    const v=id=>document.getElementById(id).value.trim();
+    const ok=[ v("a1").toUpperCase().replace(/\s/g,"")==="EVERLAST", v("a2")==="1", v("a3")==="1", v("a4").replace(/\D/g,"")==="1940", v("a5")==="2" ];
+    const n=ok.filter(Boolean).length, f=document.getElementById("fb");
+    if(n===5){ fb(f,true,"Scharfe Detektivaugen! Ja, ca. 110 Millionen Dollar (110,5 Mio.)."); solved(r); }
+    else fb(f,false,`${n} von 5 Antworten sind richtig. Falsch: ${ok.map((x,i)=>x?null:"abcde"[i]).filter(Boolean).join(", ")}.`);
+  };
+}
+
+/* ---- Raum 7: Ruhm & Vermächtnis ---- */
+function r7(r){
+  const G=[
+    {o:["arm","berühmt","vergessen"], a:1},
+    {o:["Pablo Picasso","Andy Warhol","Vincent van Gogh"], a:1},
+    {o:["Druck","Langeweile","Ruhe"], a:0},
+    {o:["Drogen","Süßigkeiten","Videospielen"], a:0},
+    {o:["17","27","72"], a:1},
+    {o:["Keller","großen Museen","Garagen"], a:1}
+  ];
+  const sel=i=>`<select id="g${i}"><option value="">……</option>${G[i].o.map((o,j)=>`<option value="${j}">${o}</option>`).join("")}</select>`;
+  app.innerHTML = roomHeader(r) + `
+  <div class="card info">
+    <span class="tag-sm">Infotext</span>
+    <p>Nach 1980 geht alles sehr schnell. Galerien in New York, Europa und Japan wollen Basquiats Bilder. Mit Anfang 20 ist er <span class="fact">berühmt</span> und verdient viel Geld. Er freundet sich mit dem berühmten Pop-Art-Künstler <span class="fact">Andy Warhol</span> an. Gemeinsam malen sie über 100 Bilder.</p>
+    <p>Doch der schnelle Ruhm hat auch eine Schattenseite. Basquiat steht unter großem <span class="fact">Druck</span>. Viele Menschen wollen etwas von ihm, und manche Kritiker sind gemein zu ihm. Er fühlt sich oft allein und wird von <span class="fact">Drogen</span> abhängig. Als 1987 sein Freund Andy Warhol stirbt, ist er sehr traurig. Im August 1988 stirbt Jean-Michel Basquiat mit nur <span class="fact">27 Jahren</span> an den Folgen seiner Drogensucht.</p>
+    <p>In nur etwa zehn Jahren hat er Hunderte Gemälde und über tausend Zeichnungen geschaffen. Heute hängen seine Bilder in <span class="fact">großen Museen</span> auf der ganzen Welt. Er hat vielen jungen Künstlerinnen und Künstlern Mut gemacht, ihre eigene Sprache zu finden.</p>
+  </div>
+  <div class="card">
+    <h2>Rätsel: Der zerrissene Zeitungsartikel</h2>
+    <p>Füllt die Lücken richtig aus.</p>
+    <div class="cloze">
+      Schon mit Anfang 20 ist Basquiat ${sel(0)}. Sein Freund, der Pop-Art-Künstler ${sel(1)}, malt mit ihm gemeinsame Bilder.
+      Der Ruhm bringt aber auch viel ${sel(2)}. Basquiat wird von ${sel(3)} abhängig und stirbt 1988 mit nur ${sel(4)} Jahren.
+      Heute sind seine Bilder in ${sel(5)} auf der ganzen Welt zu sehen.
+    </div>
+    <div class="row" style="margin-top:12px"><button class="btn" id="check">Prüfen</button></div>
+    <div class="feedback" id="fb"></div>
+    ${hintBox(r)}
+    <div id="solvedBox"></div>
+  </div>`;
+  document.getElementById("check").onclick=()=>{
+    let right=0, empty=0; G.forEach((g,i)=>{ const v=document.getElementById("g"+i).value; if(v==="") empty++; else if(+v===g.a) right++; });
+    const f=document.getElementById("fb");
+    if(empty) return fb(f,false,"Füllt zuerst alle Lücken aus.");
+    if(right===G.length){ fb(f,true,"Der Artikel ist wieder vollständig."); solved(r); }
+    else fb(f,false,`${right} von ${G.length} Lücken sind richtig.`);
+  };
+}
+
+/* ---- Tür ---- */
+function viewDoor(){
+  if(unlockedIndex()<ROOMS.length) return go("map");
+  const letters=ROOMS.map(r=>`<div class="slot">${r.letter}</div>`).join("");
+  app.innerHTML = `
+  <div class="row"><button class="btn small secondary" onclick="go('map')">← Zum Lageplan</button></div>
+  <h1>🚪 Die Ateliertür</h1>
+  <div class="card yellow">
+    <p>Ihr habt alle sieben Buchstaben gefunden:</p>
+    <div class="lettersbar">${letters}</div>
+    <p>Die Buchstaben sind aber <b>durcheinander</b>! Bringt sie in die richtige Reihenfolge. Ein Hinweis: Basquiat kannte es aus seinem Anatomie-Buch, und es steckt in jedem von uns.</p>
+    <div class="row"><input type="text" id="code" maxlength="12" placeholder="Lösungswort" style="max-width:280px;text-transform:uppercase;font-family:'Permanent Marker',cursive;font-size:1.4rem" autocomplete="off">
+    <button class="btn red" id="open">Tür öffnen</button></div>
+    <div class="feedback" id="fb"></div>
+  </div>`;
+  const tryOpen=()=>{
+    const v=document.getElementById("code").value.trim().toUpperCase();
+    if(v===SOLUTION){ S.finished=Date.now(); save(); go("cert"); }
+    else fb(document.getElementById("fb"),false,"Die Tür bleibt zu. Versucht eine andere Reihenfolge!");
+  };
+  document.getElementById("open").onclick=tryOpen;
+  document.getElementById("code").addEventListener("keydown",e=>{ if(e.key==="Enter") tryOpen(); });
+}
+
+function viewCert(){
+  app.innerHTML = `
+  <div class="cert">
+    ${CROWN("#e63323",110)}
+    <h1>Ausbruch geschafft!</h1>
+    <p style="font-size:1.2rem">Team <b>${esc(S.team)}</b> hat das Lösungswort gefunden:</p>
+    <div class="marker" style="font-size:3.2rem;color:#e63323;letter-spacing:6px">SKELETT</div>
+    <p>Zeit: <b>${fmt(S.elapsed)}</b> · Benutzte Tipps: <b>${S.hints}</b></p>
+    <p>Ihr seid jetzt Basquiat-Expertinnen und -Experten! ${CROWN("#141414",36)}</p>
+  </div>
+  <div class="card yellow">
+    <h2>Und jetzt?</h2>
+    <p>Zeigt diese Seite eurer Lehrkraft. Gleich arbeitet ihr selbst kreativ mit einem Bild von Basquiat. Und das Lösungswort ist kein Zufall: In den nächsten Stunden malt ihr <b>ein wildes Skelett im Stil von Basquiat</b>, mit Krone, Zeichen und Wörtern.</p>
+    <p><b>Bis alle fertig sind:</b> Sucht euch euer Lieblingsbild aus Raum 5 aus. Schreibt drei Wörter auf, die zeigen, wie das Bild auf euch wirkt.</p>
+  </div>`;
+}
+
+/* Fehlende Bilder: Platzhalter anzeigen */
+document.addEventListener("error",e=>{
+  const im=e.target; if(!(im instanceof HTMLImageElement) || im.dataset.missing) return;
+  im.dataset.missing="1";
+  const file=(im.getAttribute("src")||"").split("/").pop();
+  const ph=document.createElement("div");
+  ph.style.cssText="background:#fffdf5;border:2px dashed #999;color:#555;padding:14px;font-size:.9rem;text-align:center;min-height:140px;display:flex;align-items:center;justify-content:center;width:100%";
+  ph.innerHTML="Bild fehlt.<br>Lege die Datei <b>bilder/"+file+"</b> neben diese HTML-Datei.";
+  im.replaceWith(ph);
+},true);
+
+/* ---------------- Init ---------------- */
+renderStats();
+if(S.started && !S.finished) startTimer();
+render();
+</script>
+</body>
+</html>
